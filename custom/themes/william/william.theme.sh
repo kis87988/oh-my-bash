@@ -122,13 +122,17 @@ GIT_THEME_PROMPT_CLEAN=" ${bold_green}✓"
 GIT_THEME_PROMPT_PREFIX="[${yellow}"
 GIT_THEME_PROMPT_SUFFIX="${normal}]"
 
+function python_env_prompt {
+	echo -e "$(virtualenv_prompt)$(condaenv_prompt)($(py_interp_prompt))"
+}
+
 function prompt_command() {
 
     PS_INFO="${bold_cyan}\u${bold_red}@${normal}\h${reset_color} ${bold_green}\w"
     git_branch="$(scm_prompt_info)${normal}"
     PS_TIME="\[\033[\$((COLUMNS-10))G\] ${normal}[\t]"
     
-    PS1="${PS_FILL}${normal}${PS_INFO}${PS_TIME}\n$(python_version_prompt) ${git_branch}${reset_color}\$ "
+    PS1="${PS_FILL}${normal}${PS_INFO}${PS_TIME}\n$(python_env_prompt) ${git_branch}${reset_color}\$ "
 }
 
 safe_append_prompt_command prompt_command
