@@ -128,7 +128,7 @@ function prompt_command() {
     git_branch="$(scm_prompt_info)${normal}"
     PS_TIME="\[\033[\$((COLUMNS-10))G\] ${normal}[\t]"
     
-    PS1="${PS_FILL}${normal}${PS_INFO}${PS_TIME}\n${git_branch}${reset_color}\$ "
+    PS1="${PS_FILL}${normal}${PS_INFO}${PS_TIME}\n$(python_version_prompt) ${git_branch}${reset_color}\$ "
 }
 
 safe_append_prompt_command prompt_command
