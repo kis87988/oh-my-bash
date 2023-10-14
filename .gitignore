@@ -3,6 +3,7 @@
 !/custom/completions/example.completion.sh
 !/custom/plugins/example/
 !/custom/themes/example/
+!/custom/themes/william/
 !/custom/example.sh
 /custom/
 
@@ -17,3 +18,4 @@
 *.disabled
 .idea/
 *.tmp
+.vscode/
