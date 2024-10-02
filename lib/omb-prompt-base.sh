@@ -185,7 +185,7 @@ function git_clean_branch {
   local stripped_ref=${unsafe_ref##refs/heads/}
   local clean_ref=${stripped_ref//[\$\`\\]/-}
   clean_ref=${clean_ref//[^[:print:]]/-} # strip escape sequences, etc.
-  echo $clean_ref
+  _omb_util_print $clean_ref
 }
 
 function git_prompt_minimal_info {
@@ -356,52 +356,58 @@ function svn_prompt_vars {
 # - .hg is located in ~/Projects/Foo/.hg
 # - get_hg_root starts at ~/Projects/Foo/Bar and sees that there is no .hg directory, so then it goes into ~/Projects/Foo
 function get_hg_root {
-    local CURRENT_DIR=$PWD
+  local CURRENT_DIR=$PWD
 
-    while [ "$CURRENT_DIR" != "/" ]; do
-        if [ -d "$CURRENT_DIR/.hg" ]; then
-            echo "$CURRENT_DIR/.hg"
-            return
-        fi
+  while [ "$CURRENT_DIR" != "/" ]; do
+    if [ -d "$CURRENT_DIR/.hg" ]; then
+      _omb_util_print "$CURRENT_DIR/.hg"
+      return
+    fi
 
-        CURRENT_DIR=$(dirname "$CURRENT_DIR")
-    done
+    CURRENT_DIR=$(dirname "$CURRENT_DIR")
+  done
 }
 
 function hg_prompt_vars {
-    if [[ -n $(command hg status 2> /dev/null) ]]; then
-      SCM_DIRTY=1
-        SCM_STATE=${HG_THEME_PROMPT_DIRTY:-$SCM_THEME_PROMPT_DIRTY}
-    else
-      SCM_DIRTY=0
-        SCM_STATE=${HG_THEME_PROMPT_CLEAN:-$SCM_THEME_PROMPT_CLEAN}
-    fi
-    SCM_PREFIX=${HG_THEME_PROMPT_PREFIX:-$SCM_THEME_PROMPT_PREFIX}
-    SCM_SUFFIX=${HG_THEME_PROMPT_SUFFIX:-$SCM_THEME_PROMPT_SUFFIX}
+  if [[ -n $(command hg status 2> /dev/null) ]]; then
+    SCM_DIRTY=1
+    SCM_STATE=${HG_THEME_PROMPT_DIRTY:-$SCM_THEME_PROMPT_DIRTY}
+  else
+    SCM_DIRTY=0
+    SCM_STATE=${HG_THEME_PROMPT_CLEAN:-$SCM_THEME_PROMPT_CLEAN}
+  fi
+  SCM_PREFIX=${HG_THEME_PROMPT_PREFIX:-$SCM_THEME_PROMPT_PREFIX}
+  SCM_SUFFIX=${HG_THEME_PROMPT_SUFFIX:-$SCM_THEME_PROMPT_SUFFIX}
 
-    HG_ROOT=$(get_hg_root)
+  HG_ROOT=$(get_hg_root)
 
-    if [ -f "$HG_ROOT/branch" ]; then
-        # Mercurial holds it's current branch in .hg/branch file
-        SCM_BRANCH=$(cat "$HG_ROOT/branch")
-    else
-        SCM_BRANCH=$(command hg summary 2> /dev/null | grep branch: | awk '{print $2}')
-    fi
+  if [ -f "$HG_ROOT/branch" ]; then
+    # Mercurial holds it's current branch in .hg/branch file
+    SCM_BRANCH=$(cat "$HG_ROOT/branch")
+  else
+    SCM_BRANCH=$(command hg summary 2> /dev/null | grep branch: | awk '{print $2}')
+  fi
 
-    if [ -f "$HG_ROOT/dirstate" ]; then
-        # Mercurial holds various information about the working directory in .hg/dirstate file. More on http://mercurial.selenic.com/wiki/DirState
-        SCM_CHANGE=$(hexdump -n 10 -e '1/1 "%02x"' "$HG_ROOT/dirstate" | cut -c-12)
-    else
-        SCM_CHANGE=$(command hg summary 2> /dev/null | grep parent: | awk '{print $2}')
-    fi
+  if [ -f "$HG_ROOT/dirstate" ]; then
+    # Mercurial holds various information about the working directory in .hg/dirstate file. More on http://mercurial.selenic.com/wiki/DirState
+    SCM_CHANGE=$(hexdump -n 10 -e '1/1 "%02x"' "$HG_ROOT/dirstate" | cut -c-12)
+  else
+    SCM_CHANGE=$(command hg summary 2> /dev/null | grep parent: | awk '{print $2}')
+  fi
 }
 
+## @fn _omb_prompt_get_rbfu
+##   @var[out] rbfu
+##   @exit
 function _omb_prompt_get_rbfu {
   rbfu=$RBFU_RUBY_VERSION
   [[ $rbfu ]] || return 1
   _omb_prompt_format rbfu "$rbfu" OMB_PROMPT_RBFU:RBFU_THEME_PROMPT
 }
 
+## @fn _omb_prompt_get_rbenv
+##   @var[out] rbenv
+##   @exit
 function _omb_prompt_get_rbenv {
   rbenv=
   _omb_util_command_exists rbenv || return 1
@@ -415,6 +421,9 @@ function _omb_prompt_get_rbenv {
   _omb_prompt_format rbenv "$rbenv" OMB_PROMPT_RBENV:RBENV_THEME_PROMPT
 }
 
+## @fn _omb_prompt_get_rvm
+##   @var[out] rvm
+##   @exit
 function _omb_prompt_get_rvm {
   rvm=
   if _omb_util_command_exists rvm-prompt; then
@@ -430,6 +439,9 @@ function _omb_prompt_get_rvm {
   _omb_prompt_format rvm "$rvm" OMB_PROMPT_RVM:RVM_THEME_PROMPT
 }
 
+## @fn _omb_prompt_get_chruby
+##   @var[out] chruby
+##   @exit
 function _omb_prompt_get_chruby {
   chruby=
   _omb_util_function_exists chruby || return 1
@@ -444,6 +456,9 @@ function _omb_prompt_get_chruby {
   chruby+=$ruby_version
 }
 
+## @fn _omb_prompt_get_ruby_env
+##   @var[out] ruby_env
+##   @exit
 function _omb_prompt_get_ruby_env {
   local rbfu rbenv rvm chruby
   _omb_prompt_get_rbfu
@@ -466,12 +481,18 @@ _omb_deprecate_function 20000 rvm_version_prompt    _omb_prompt_print_rvm
 _omb_deprecate_function 20000 chruby_version_prompt _omb_prompt_print_chruby
 _omb_deprecate_function 20000 ruby_version_prompt   _omb_prompt_print_ruby_env
 
+## @fn _omb_prompt_get_virtualenv
+##   @var[out] virtualenv
+##   @exit
 function _omb_prompt_get_virtualenv {
   virtualenv=
   [[ ${VIRTUAL_ENV-} ]] || return 1
   _omb_prompt_format virtualenv "$(basename "$VIRTUAL_ENV")" OMB_PROMPT_VIRTUALENV:VIRTUALENV_THEME_PROMPT
 }
 
+## @fn _omb_prompt_get_condaenv
+##   @var[out] condaenv
+##   @exit
 function _omb_prompt_get_condaenv {
   condaenv=
   [[ ${CONDA_DEFAULT_ENV-} && ${CONDA_SHLVL-} != 0 ]] || return 1
@@ -483,12 +504,18 @@ function _omb_prompt_get_condaenv {
   _omb_prompt_format condaenv "$condaenv" OMB_PROMPT_CONDAENV:CONDAENV_THEME_PROMPT
 }
 
+## @fn _omb_prompt_get_python_version
+##   @var[out] python_version
+##   @exit
 function _omb_prompt_get_python_version {
   python_version=$(python --version 2>&1 | command awk '{print "py-"$2;}')
   [[ $python_version ]] || return 1
   _omb_prompt_format python_version "$python_version" OMB_PROMPT_PYTHON_VERSION:PYTHON_THEME_PROMPT
 }
 
+## @fn _omb_prompt_get_python_venv
+##   @var[out] python_venv
+##   @exit
 function _omb_prompt_get_python_venv {
   python_venv=
   [[ ${OMB_PROMPT_SHOW_PYTHON_VENV-} == true ]] || return 1
@@ -498,6 +525,10 @@ function _omb_prompt_get_python_venv {
   python_venv=$virtualenv$condaenv
   [[ $python_venv ]]
 }
+
+## @fn _omb_prompt_get_python_env
+##   @var[out] python_env
+##   @exit
 function _omb_prompt_get_python_env {
   local virtualenv condaenv python_version
   _omb_prompt_get_virtualenv
@@ -576,37 +607,37 @@ function scm_char {
 }
 
 function prompt_char {
-    scm_char
+  scm_char
 }
 
 function battery_char {
-    if [[ "${THEME_BATTERY_PERCENTAGE_CHECK}" = true ]]; then
-        echo -e "${_omb_prompt_bold_brown}$(battery_percentage)%"
-    fi
+  if [[ "${THEME_BATTERY_PERCENTAGE_CHECK}" = true ]]; then
+    echo -e "${_omb_prompt_bold_brown}$(battery_percentage)%"
+  fi
 }
 
 if ! _omb_util_command_exists 'battery_charge' ; then
-    # if user has installed battery plugin, skip this...
-    function battery_charge (){
-        # no op
-        echo -n
-    }
+  # if user has installed battery plugin, skip this...
+  function battery_charge (){
+    # no op
+    _omb_util_put
+  }
 fi
 
 # The battery_char function depends on the presence of the battery_percentage function.
 # If battery_percentage is not defined, then define battery_char as a no-op.
 if ! _omb_util_command_exists 'battery_percentage' ; then
-    function battery_char (){
-      # no op
-      echo -n
-    }
+  function battery_char (){
+    # no op
+    _omb_util_put
+  }
 fi
 
 function aws_profile {
   if [[ $AWS_DEFAULT_PROFILE ]]; then
-    echo -e "${AWS_DEFAULT_PROFILE}"
+    _omb_util_print "$AWS_DEFAULT_PROFILE"
   else
-    echo -e "default"
+    _omb_util_print "default"
   fi
 }
 

@@ -59,6 +59,10 @@
 
 [![](demula/demula-dark.png)](demula/demula-dark.png)
 
+## `developer`
+
+[![](developer/developer_theme_2024_02_09.png)](developer/developer_theme_2024_02_09.png)
+
 ## `dos`
 
 [![](dos/dos-dark.png)](dos/dos-dark.png)
@@ -203,6 +207,10 @@
 ## `powerline-plain`
 
 [![](powerline-plain/powerline-plain-dark.png)](powerline-plain/powerline-plain-dark.png)
+
+## `powerline-wizard`
+
+[![](powerline-wizard/powerline-wizard-dark.png)](powerline-wizard/powerline-wizard-dark.png)
 
 ## `primer`
 
